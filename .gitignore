@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+.npm/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+config.json
+
+# Local storage data (created by the bot)
+data/
+allowed_domains.json
+pending_codes/
+used_codes/
+
+# AWS
+.aws/
+aws-config.json
+aws-credentials.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
