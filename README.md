@@ -28,9 +28,10 @@ The bot is organized into modular components for better maintainability:
 - events.js - Discord event handlers (ready, member joins, interactions)
 
 **commands/ - Command implementations**
-    - index.js - Command registration
-    - admin.js - Admin command handlers
-    - verify.js - User verification command handlers
+  - index.js - Command registration
+  - admin.js - Admin command handlers
+  - verify.js - User verification command handlers
+
 
 ## Commands
 
