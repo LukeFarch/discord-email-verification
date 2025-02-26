@@ -16,6 +16,22 @@
 - **Admin Controls**: Administrative commands for managing domains and email usage
 - **Quarantine System**: Automatically quarantines new members until verified
 
+
+## Code Structure
+The bot is organized into modular components for better maintainability:
+
+- index.js - Main entry point that initializes the bot
+- config.js - Centralized configuration and environment settings
+- utils.js - Utility functions for code generation, time formatting, etc.
+- storage.js - Handles data persistence (local files or S3)
+- emailer.js - Email verification functionality using SendGrid
+- events.js - Discord event handlers (ready, member joins, interactions)
+
+**commands/ - Command implementations**
+    - index.js - Command registration
+    - admin.js - Admin command handlers
+    - verify.js - User verification command handlers
+
 ## Commands
 
 ### User Commands
