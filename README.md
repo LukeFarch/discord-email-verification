@@ -6,13 +6,12 @@
 [![SendGrid](https://img.shields.io/badge/SendGrid-Email-green.svg)](https://sendgrid.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-16.x-green.svg)](https://nodejs.org)
 
-A Discord bot that verifies users with educational email domains. The bot sends verification codes via email, stores pending verification codes in AWS S3, and tracks used codes to enforce verification limits.
 
 ## Features
-
 - **Email Verification**: Validates users through educational email addresses
 - **Domain Control**: Configurable list of allowed email domains
-- **Secure Storage**: AWS S3 integration for persistent verification code storage
+- **Flexible Storage**: Store verification data locally or in AWS S3
+- **No AWS Required**: Can run completely without AWS infrastructure
 - **Verification Limits**: Caps each email at two total verifications
 - **Admin Controls**: Administrative commands for managing domains and email usage
 - **Quarantine System**: Automatically quarantines new members until verified
@@ -29,16 +28,33 @@ A Discord bot that verifies users with educational email domains. The bot sends 
 - `/admin domain-list` - List all allowed email domains
 - `/admin checkemail <email>` - Check verification history for an email
 - `/admin resetemail <email>` - Reset verification count for an email
+- `/admin storage-info` - Display current storage configuration
+
+## Storage Options
+
+The bot now supports multiple storage configurations:
+
+1. **AWS S3 Storage**: Store all data in AWS S3 buckets (original behavior)
+2. **Local Storage**: Store all data locally in the file system
+3. **Hybrid Storage**: Mix and match which components use S3 or local storage
+
+### Local Storage Structure
+When using local storage, data is organized as follows:
+```
+/                           # Project root
+├── allowed_domains.json    # Allowed email domains
+└── data/                   # Data directory
+    ├── pending_codes/      # Active verification codes
+    └── used_codes/         # Verification history
+```
 
 ## Prerequisites
-
 - Node.js 16.x or higher
-- AWS account with S3 access
 - SendGrid account for email delivery
 - Discord Bot Token and appropriate permissions
+- AWS account with S3 access (optional, only if using S3 storage)
 
 ## Installation
-
 1. Clone this repository:
    ```bash
    git clone https://github.com/LukeFarch/discord-email-verification.git
@@ -66,14 +82,16 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    SENDGRID_API_KEY=your_sendgrid_api_key
    SENDGRID_FROM_EMAIL=your_from_email
    SENDGRID_FROM_NAME=Discord Verification
-
-   # AWS Configuration
+   
+   # Storage Configuration
+   USE_LOCAL_STORAGE=false                   # Set to true to use local storage for everything
+   USE_LOCAL_CODES_STORAGE=false             # Set to true to store pending codes locally
+   USE_LOCAL_USED_CODES_STORAGE=false        # Set to true to store used codes locally
+   
+   # AWS Configuration (optional if using local storage)
    AWS_REGION=us-east-1
    S3_BUCKET_NAME=your_verification_codes_bucket
    USED_CODES_BUCKET=your_used_codes_bucket
-   
-   # Storage Configuration (optional)
-   USE_LOCAL_STORAGE=false
    ```
 
 4. Run the bot:
@@ -81,10 +99,27 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    node index.js
    ```
 
-## AWS EC2 Deployment Guide
+## Running Without AWS
+
+To run the bot completely without AWS:
+
+1. Set the following in your `.env` file:
+   ```
+   USE_LOCAL_STORAGE=true
+   ```
+
+2. No AWS credentials or S3 buckets needed!
+
+3. Run the bot normally:
+   ```bash
+   node index.js
+   ```
+
+## AWS EC2 Deployment Guide (Optional)
+
+Only needed if you choose to use AWS for deployment. You can also deploy on any other hosting service.
 
 ### Setting Up an EC2 Instance
-
 1. **Create an EC2 Instance**:
    - Log in to your AWS Management Console
    - Navigate to EC2 service
@@ -131,7 +166,7 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    # Paste your environment variables and save (Ctrl+X, Y, Enter)
    ```
 
-5. **Configure AWS Credentials**:
+5. **Configure AWS Credentials** (only if using S3 storage):
    ```bash
    mkdir -p ~/.aws
    nano ~/.aws/credentials
@@ -145,7 +180,6 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    Save the file (Ctrl+X, Y, Enter)
 
 ### Running the Bot Persistently
-
 1. **Install PM2 (Process Manager)**:
    ```bash
    sudo npm install -g pm2
@@ -165,17 +199,14 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    ```
 
 ### Monitoring and Management
-
 - **View logs**:
   ```bash
   pm2 logs discord-email-verification
   ```
-
 - **Restart the bot**:
   ```bash
   pm2 restart discord-email-verification
   ```
-
 - **Update the bot**:
   ```bash
   cd ~/discord-email-verification
@@ -184,7 +215,9 @@ A Discord bot that verifies users with educational email domains. The bot sends 
   pm2 restart discord-email-verification
   ```
 
-## AWS S3 Bucket Setup
+## AWS S3 Bucket Setup (Optional)
+
+Only required if using S3 storage options.
 
 1. **Create S3 Buckets**:
    - Create two S3 buckets:
@@ -216,8 +249,19 @@ A Discord bot that verifies users with educational email domains. The bot sends 
    }
    ```
 
-## Functionality
+## Security Considerations
 
+### Email Data Protection
+The bot stores verification history including email addresses. Consider these security recommendations:
+
+- **Data Encryption**: If using local storage, consider encrypting the data directory
+- **Access Controls**: Restrict access to the storage directories or S3 buckets
+- **Regular Cleanups**: Implement regular cleanups of old verification data
+- **Secure Your .env File**: Ensure your environment variables file is not accessible
+
+**Note**: The current implementation does not include encryption for locally stored emails. If your server handles sensitive or regulated data, consider implementing additional security measures or using S3 with server-side encryption.
+
+## Functionality
 The bot implements the following workflow:
 
 1. **Member Joins**: New Discord members are assigned the quarantine role automatically
@@ -228,13 +272,11 @@ The bot implements the following workflow:
 6. **Welcome Message**: A welcome message is sent to the designated channel
 
 ### Security Features
-
 - Verification codes expire after 30 minutes
 - Limits retries to 3 attempts before requiring a new code
 - Caps each email address at 2 total verifications
 - Admin commands allow management of email domains and verification history
-- Verification codes are securely stored in AWS S3
+- Flexible storage options for verification data
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
